@@ -37,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/pipeline")({
 
 function Pipeline() {
   const invalidate = useInvalidate();
-  const { data, isLoading, error } = useLeads({ pageSize: 500, page: 1 });
+  const { data, isLoading, error } = useLeads({ pageSize: 500, page: 1, stage: "MAIN" });
   const [dragging, setDragging] = useState<Lead | null>(null);
   const [pending, setPending] = useState<{ lead: Lead; status: string } | null>(null);
 

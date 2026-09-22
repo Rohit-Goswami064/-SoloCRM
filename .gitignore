@@ -33,6 +33,3 @@ dist-ssr
 
 # Vercel
 .vercel
-
-# Local environment (never commit)
-.env

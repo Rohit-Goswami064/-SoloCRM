@@ -139,6 +139,7 @@ function LeadsPage() {
 
   const filters = {
     search: debounced,
+    stage: "MAIN",
     status: search.status ? [search.status] : undefined,
     temperature: search.temperature ? [search.temperature] : undefined,
     sourceId: search.source ?? null,
@@ -219,12 +220,8 @@ function LeadsPage() {
   return (
     <div>
       <PageHeader
-        title={isAdmin ? "Leads" : "My leads"}
-        description={
-          isAdmin
-            ? `${total} lead${total === 1 ? "" : "s"} in your database`
-            : `${total} lead${total === 1 ? "" : "s"} assigned to you`
-        }
+        title={isAdmin ? "Main leads" : "My main leads"}
+        description={`${total} qualified lead${total === 1 ? "" : "s"} in the pipeline — new imports wait in Incoming leads`}
         actions={
           isAdmin ? (
             <>

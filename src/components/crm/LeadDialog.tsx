@@ -23,11 +23,14 @@ export function LeadDialog({
   onOpenChange,
   lead,
   onSaved,
+  stage = "MAIN",
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   lead?: Lead | null;
   onSaved?: () => void;
+  /** Where a newly created lead should land. Manually added leads skip Incoming. */
+  stage?: "INCOMING" | "MAIN";
 }) {
   const { data: sources = [] } = useSources();
   const { data: categories = [] } = useCategories();
@@ -154,7 +157,11 @@ export function LeadDialog({
           await logAudit("LEAD_UPDATED", "lead", lead.id, payload);
           toast.success("Lead updated");
         } else {
-          const created = await insertRow("leads", payload);
+          const created = await insertRow("leads", {
+            ...payload,
+            stage,
+            qualification_status: stage === "MAIN" ? "QUALIFIED" : "UNQUALIFIED",
+          });
           await logActivity({ type: "NOTE", title: "Lead created", lead_id: created.id });
           await logAudit("LEAD_CREATED", "lead", created.id, payload);
           toast.success("Lead added");

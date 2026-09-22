@@ -20,6 +20,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFilesRouteImport } from './routes/_authenticated/files'
 import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
+import { Route as AuthenticatedIncomingRouteImport } from './routes/_authenticated/incoming'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedPipelineRouteImport } from './routes/_authenticated/pipeline'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -83,6 +84,11 @@ const AuthenticatedFollowUpsRoute = AuthenticatedFollowUpsRouteImport.update({
 const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedIncomingRoute = AuthenticatedIncomingRouteImport.update({
+  id: '/incoming',
+  path: '/incoming',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPaymentsRoute = AuthenticatedPaymentsRouteImport.update({
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/files': typeof AuthenticatedFilesRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/import': typeof AuthenticatedImportRoute
+  '/incoming': typeof AuthenticatedIncomingRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/files': typeof AuthenticatedFilesRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/import': typeof AuthenticatedImportRoute
+  '/incoming': typeof AuthenticatedIncomingRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/pipeline': typeof AuthenticatedPipelineRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/_authenticated/files': typeof AuthenticatedFilesRoute
   '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
+  '/_authenticated/incoming': typeof AuthenticatedIncomingRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/pipeline': typeof AuthenticatedPipelineRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/files'
     | '/follow-ups'
     | '/import'
+    | '/incoming'
     | '/payments'
     | '/pipeline'
     | '/reports'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/files'
     | '/follow-ups'
     | '/import'
+    | '/incoming'
     | '/payments'
     | '/pipeline'
     | '/reports'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/_authenticated/files'
     | '/_authenticated/follow-ups'
     | '/_authenticated/import'
+    | '/_authenticated/incoming'
     | '/_authenticated/payments'
     | '/_authenticated/pipeline'
     | '/_authenticated/reports'
@@ -362,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/incoming': {
+      id: '/_authenticated/incoming'
+      path: '/incoming'
+      fullPath: '/incoming'
+      preLoaderRoute: typeof AuthenticatedIncomingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/payments': {
       id: '/_authenticated/payments'
       path: '/payments'
@@ -444,6 +463,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFilesRoute: typeof AuthenticatedFilesRoute
   AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
+  AuthenticatedIncomingRoute: typeof AuthenticatedIncomingRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedPipelineRoute: typeof AuthenticatedPipelineRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -465,6 +485,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFilesRoute: AuthenticatedFilesRoute,
   AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
+  AuthenticatedIncomingRoute: AuthenticatedIncomingRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedPipelineRoute: AuthenticatedPipelineRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,

@@ -125,6 +125,9 @@ export function useCategories() {
 
 export type LeadFilters = {
   search?: string | undefined;
+  stage?: string | undefined;
+  qualification?: string | undefined;
+  importId?: string | undefined;
   status?: string[] | undefined;
   temperature?: string[] | undefined;
   sourceId?: string | null | undefined;
@@ -146,6 +149,9 @@ export function buildLeadQuery(filters: LeadFilters) {
       `name.ilike.%${s}%,company.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%,city.ilike.%${s}%`,
     );
   }
+  if (filters.stage) q = q.eq("stage", filters.stage);
+  if (filters.qualification) q = q.eq("qualification_status", filters.qualification);
+  if (filters.importId) q = q.eq("import_id", filters.importId);
   if (filters.status?.length) q = q.in("status", filters.status);
   if (filters.temperature?.length) q = q.in("temperature", filters.temperature);
   if (filters.sourceId) q = q.eq("source_id", filters.sourceId);
@@ -253,6 +259,86 @@ export async function changeLeadStatus(lead: Lead, status: string) {
     lead_id: lead.id,
   });
   await logAudit("STATUS_CHANGED", "lead", lead.id, { from: lead.status, to: status });
+}
+
+/** Moves a lead out of Incoming into the main pipeline. Same record — only the stage changes. */
+export async function qualifyLead(
+  lead: Lead,
+  input: {
+    interested: boolean;
+    service_interested?: string | null;
+    estimated_budget?: number | null;
+    requirement?: string | null;
+    expected_timeline?: string | null;
+    notes?: string | null;
+  },
+) {
+  const userId = await currentUserId();
+  await updateRow("leads", lead.id, {
+    stage: "MAIN",
+    qualification_status: "QUALIFIED",
+    status: "QUALIFIED",
+    temperature: input.interested ? "HOT" : "WARM",
+    service_interested: input.service_interested || lead.service_interested,
+    estimated_budget: input.estimated_budget ?? lead.estimated_budget,
+    requirement: input.requirement ?? null,
+    expected_timeline: input.expected_timeline ?? null,
+    qualification_notes: input.notes ?? null,
+    qualification_date: new Date().toISOString(),
+    qualified_by: userId,
+    last_contact_at: new Date().toISOString(),
+  });
+  await logActivity({
+    type: "STATUS_CHANGE",
+    title: "Lead qualified",
+    body: [
+      input.interested ? "Business is interested." : "Business is not sure yet.",
+      input.service_interested ? `Service: ${input.service_interested}` : null,
+      input.requirement ? `Requirement: ${input.requirement}` : null,
+      input.expected_timeline ? `Timeline: ${input.expected_timeline}` : null,
+      input.notes,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    lead_id: lead.id,
+  });
+  await logAudit("LEAD_QUALIFIED", "lead", lead.id, { from: lead.stage });
+}
+
+/** Records a call outcome that does not qualify the lead. Nothing is ever deleted. */
+export async function dispositionLead(
+  lead: Lead,
+  outcome: "NOT_INTERESTED" | "INVALID" | "NO_RESPONSE" | "CALLING",
+  reason?: string | null,
+) {
+  const patch: Record<string, any> = {
+    qualification_status: outcome,
+    disposition_reason: reason ?? null,
+    last_contact_at: new Date().toISOString(),
+  };
+  if (outcome === "NOT_INTERESTED") {
+    patch['stage'] = "NOT_INTERESTED";
+    patch['status'] = "NOT_INTERESTED";
+  } else if (outcome === "INVALID") {
+    patch['stage'] = "INVALID";
+  } else {
+    patch['stage'] = "INCOMING";
+    if (outcome === "CALLING") patch['status'] = "CONTACTED";
+  }
+  await updateRow("leads", lead.id, patch);
+  const labels: Record<string, string> = {
+    NOT_INTERESTED: "Marked not interested",
+    INVALID: "Marked invalid",
+    NO_RESPONSE: "No response",
+    CALLING: "Calling in progress",
+  };
+  await logActivity({
+    type: "CALL",
+    title: labels[outcome] ?? outcome,
+    body: reason ?? null,
+    lead_id: lead.id,
+  });
+  await logAudit("LEAD_DISPOSITION", "lead", lead.id, { outcome, reason });
 }
 
 /** Converts a WON lead into a customer, reusing an existing customer when one matches. */

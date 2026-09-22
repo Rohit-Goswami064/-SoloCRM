@@ -18,7 +18,8 @@ import {
 import { LEAD_STATUSES, formatDateTime, labelOf, toneOf, waLink } from "@/lib/crm/constants";
 import { changeLeadStatus, updateRow, logActivity, useCategories } from "@/lib/crm/db";
 import { useMe } from "@/lib/crm/roles";
-import { Phone, MessageCircle, StickyNote, CalendarClock, Check } from "lucide-react";
+import { QualifyDialog, DispositionDialog } from "./QualifyDialog";
+import { Phone, MessageCircle, StickyNote, CalendarClock, Check, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 
 function useMyDay(userId: string | undefined) {
@@ -66,8 +67,11 @@ function useMyDay(userId: string | undefined) {
         lastNote,
         overdue,
         today,
+        incomingLeads: leads.filter((l) => l.stage === "INCOMING"),
         kpis: {
           total: leads.length,
+          incoming: leads.filter((l) => l.stage === "INCOMING").length,
+          qualified: leads.filter((l) => l.qualification_status === "QUALIFIED").length,
           interested: leads.filter((l) => l.status === "INTERESTED").length,
           won: leads.filter((l) => l.status === "WON").length,
           hot: leads.filter((l) => l.temperature === "HOT").length,
@@ -84,6 +88,11 @@ export function CallerDashboard() {
   const qc = useQueryClient();
   const [noteFor, setNoteFor] = useState<any>(null);
   const [followUpFor, setFollowUpFor] = useState<any>(null);
+  const [qualifyFor, setQualifyFor] = useState<any>(null);
+  const [disposition, setDisposition] = useState<{
+    lead: any;
+    outcome: "NOT_INTERESTED" | "INVALID" | "NO_RESPONSE";
+  } | null>(null);
 
   const refresh = () => void qc.invalidateQueries();
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "-";
@@ -117,12 +126,77 @@ export function CallerDashboard() {
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <KpiCard label="My leads" value={data.kpis.total} to="/leads" />
-        <KpiCard label="Today's follow-ups" value={data.today.length} tone="accent" />
-        <KpiCard label="Overdue" value={data.overdue.length} tone="danger" />
-        <KpiCard label="Interested" value={data.kpis.interested} tone="warning" />
+        <KpiCard label="My incoming leads" value={data.kpis.incoming} to="/incoming" tone="accent" />
+        <KpiCard label="My qualified leads" value={data.kpis.qualified} to="/leads" tone="success" />
+        <KpiCard label="Today's calls" value={data.today.length} />
+        <KpiCard label="Overdue follow-ups" value={data.overdue.length} tone="danger" />
         <KpiCard label="Won" value={data.kpis.won} tone="success" />
       </div>
+
+      {data.incomingLeads.length > 0 && (
+        <section className="mb-6">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold">My incoming leads</h2>
+            <Button asChild size="sm" variant="ghost">
+              <Link to="/incoming">See all {data.kpis.incoming}</Link>
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {data.incomingLeads.slice(0, 5).map((lead: any) => (
+              <Surface key={lead.id} className="space-y-3">
+                <div className="min-w-0">
+                  <Link
+                    to="/leads/$leadId"
+                    params={{ leadId: lead.id }}
+                    className="text-base font-semibold hover:underline"
+                  >
+                    {lead.company || lead.name}
+                  </Link>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {lead.name} · {categoryName(lead.category_id)}
+                  </p>
+                  <p className="mt-1 tabular-nums text-sm">{lead.phone ?? "No phone"}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                  <Button asChild size="lg" disabled={!lead.phone} className="h-12">
+                    <a href={`tel:${lead.phone ?? ""}`}>
+                      <Phone className="size-4" /> Call
+                    </a>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="h-12">
+                    <a href={waLink(lead.whatsapp || lead.phone) ?? "#"} target="_blank" rel="noreferrer">
+                      <MessageCircle className="size-4" /> WhatsApp
+                    </a>
+                  </Button>
+                  <Button size="lg" variant="secondary" className="h-12" onClick={() => setQualifyFor(lead)}>
+                    <BadgeCheck className="size-4" /> Qualify
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12"
+                    onClick={() => setDisposition({ lead, outcome: "NO_RESPONSE" })}
+                  >
+                    No response
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-12"
+                    onClick={() => setDisposition({ lead, outcome: "NOT_INTERESTED" })}
+                  >
+                    Not interested
+                  </Button>
+                  <Button size="lg" variant="outline" className="h-12" onClick={() => setFollowUpFor(lead)}>
+                    <CalendarClock className="size-4" /> Follow-up
+                  </Button>
+                </div>
+              </Surface>
+            ))}
+          </div>
+        </section>
+      )}
+
 
       <h2 className="mb-2 text-base font-semibold">Today's calls</h2>
       {callList.length === 0 ? (
@@ -251,6 +325,29 @@ export function CallerDashboard() {
           onOpenChange={(o) => !o && setFollowUpFor(null)}
           leadId={followUpFor.id}
           onSaved={refresh}
+        />
+      )}
+      {qualifyFor && (
+        <QualifyDialog
+          open={!!qualifyFor}
+          onOpenChange={(o) => !o && setQualifyFor(null)}
+          lead={qualifyFor}
+          onSaved={() => {
+            setQualifyFor(null);
+            refresh();
+          }}
+        />
+      )}
+      {disposition && (
+        <DispositionDialog
+          open
+          onOpenChange={(o) => !o && setDisposition(null)}
+          lead={disposition.lead}
+          outcome={disposition.outcome}
+          onSaved={() => {
+            setDisposition(null);
+            refresh();
+          }}
         />
       )}
     </div>

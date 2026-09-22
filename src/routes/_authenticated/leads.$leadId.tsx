@@ -21,8 +21,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { QualifyDialog, DispositionDialog } from "@/components/crm/QualifyDialog";
 import {
   LEAD_STATUSES,
+  LEAD_STAGES,
+  QUALIFICATION_STATUSES,
   TEMPERATURES,
   WHATSAPP_TEMPLATES,
   FOLLOWUP_STATUSES,
@@ -131,6 +134,10 @@ function LeadDetail() {
   const [confirmConvert, setConfirmConvert] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [qualifyOpen, setQualifyOpen] = useState(false);
+  const [dispositionOutcome, setDispositionOutcome] = useState<
+    "NOT_INTERESTED" | "INVALID" | "NO_RESPONSE" | null
+  >(null);
 
   if (isLoading) return <LoadingRows rows={6} />;
   if (error) return <ErrorState error={error} />;
@@ -178,6 +185,14 @@ function LeadDetail() {
       <Surface className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill label={labelOf(LEAD_STATUSES, lead.status)} tone={toneOf(LEAD_STATUSES, lead.status)} />
+          <StatusPill
+            label={labelOf(LEAD_STAGES, (lead as any).stage)}
+            tone={toneOf(LEAD_STAGES, (lead as any).stage)}
+          />
+          <StatusPill
+            label={labelOf(QUALIFICATION_STATUSES, (lead as any).qualification_status)}
+            tone={toneOf(QUALIFICATION_STATUSES, (lead as any).qualification_status)}
+          />
           <StatusPill label={labelOf(TEMPERATURES, lead.temperature)} tone={toneOf(TEMPERATURES, lead.temperature)} />
           <span className="text-sm font-semibold tabular-nums">{formatMoney(lead.deal_value)}</span>
           <Popover>
@@ -278,7 +293,23 @@ function LeadDetail() {
           <Button variant="outline" size="sm" onClick={() => setTaskOpen(true)}>
             <ListTodo className="size-4" /> Task
           </Button>
-          {!lead.converted_customer_id && (
+          {(lead as any).stage === "INCOMING" && (
+            <>
+              <Button size="sm" onClick={() => setQualifyOpen(true)}>
+                <CheckCircle2 className="size-4" /> Qualify
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setDispositionOutcome("NO_RESPONSE")}>
+                No response
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setDispositionOutcome("NOT_INTERESTED")}>
+                Not interested
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setDispositionOutcome("INVALID")}>
+                Invalid
+              </Button>
+            </>
+          )}
+          {!lead.converted_customer_id && (lead as any).stage === "MAIN" && (
             <Button size="sm" onClick={() => setConfirmConvert(true)}>
               <UserCheck className="size-4" /> Convert to customer
             </Button>
@@ -328,6 +359,38 @@ function LeadDetail() {
             <Field label="Estimated budget" value={lead.estimated_budget ? formatMoney(lead.estimated_budget) : "-"} />
             <Field label="Proposal status" value={lead.proposal_status} />
             <Field label="Lost reason" value={lead.lost_reason} />
+          </Surface>
+          <Surface className="space-y-3">
+            <h2 className="text-sm font-semibold">Qualification</h2>
+            <Field label="Stage" value={labelOf(LEAD_STAGES, (lead as any).stage)} />
+            <Field
+              label="Qualification"
+              value={labelOf(QUALIFICATION_STATUSES, (lead as any).qualification_status)}
+            />
+            <Field label="Requirement" value={(lead as any).requirement} />
+            <Field label="Expected timeline" value={(lead as any).expected_timeline} />
+            <Field label="Qualification notes" value={(lead as any).qualification_notes} />
+            <Field label="Qualified on" value={formatDateTime((lead as any).qualification_date)} />
+            <Field label="Outcome reason" value={(lead as any).disposition_reason} />
+          </Surface>
+          <Surface className="space-y-3 lg:col-span-2">
+            <h2 className="text-sm font-semibold">Imported information</h2>
+            {Object.keys(((lead as any).custom_fields ?? {}) as Record<string, any>).length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No extra columns were imported for this lead.
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {Object.entries((lead as any).custom_fields as Record<string, any>).map(([k, v]) => (
+                  <Field key={k} label={k.replaceAll("_", " ")} value={String(v ?? "-")} />
+                ))}
+              </div>
+            )}
+            {(lead as any).import_id && (
+              <p className="text-xs text-muted-foreground">
+                Imported from file row {String((lead as any).import_row_number ?? "-")}.
+              </p>
+            )}
           </Surface>
         </TabsContent>
 
@@ -528,6 +591,26 @@ function LeadDetail() {
           refresh();
         }}
       />
+
+      <QualifyDialog
+        open={qualifyOpen}
+        onOpenChange={setQualifyOpen}
+        lead={lead}
+        onSaved={refresh}
+      />
+
+      {dispositionOutcome && (
+        <DispositionDialog
+          open
+          onOpenChange={(v) => !v && setDispositionOutcome(null)}
+          lead={lead}
+          outcome={dispositionOutcome}
+          onSaved={() => {
+            setDispositionOutcome(null);
+            refresh();
+          }}
+        />
+      )}
 
       <ConfirmDialog
         open={!!confirmStatus}

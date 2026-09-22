@@ -28,11 +28,47 @@ export const LEAD_STATUSES: { value: LeadStatus; label: string; tone: Tone }[] =
 ];
 
 export const PIPELINE_STATUSES: LeadStatus[] = [
-  "NEW",
-  "CONTACTED",
-  "INTERESTED",
+  "QUALIFIED",
   "FOLLOW_UP",
   "PROPOSAL_SENT",
+  "NEGOTIATION",
+  "WON",
+  "LOST",
+];
+
+/** Where a lead sits in the workflow: freshly imported, working pipeline, or parked. */
+export type LeadStage = "INCOMING" | "MAIN" | "NOT_INTERESTED" | "INVALID";
+
+export const LEAD_STAGES: { value: LeadStage; label: string; tone: Tone }[] = [
+  { value: "INCOMING", label: "Incoming", tone: "info" },
+  { value: "MAIN", label: "Main", tone: "accent" },
+  { value: "NOT_INTERESTED", label: "Not interested", tone: "neutral" },
+  { value: "INVALID", label: "Invalid", tone: "danger" },
+];
+
+export type QualificationStatus =
+  | "UNQUALIFIED"
+  | "CALLING"
+  | "QUALIFIED"
+  | "NOT_INTERESTED"
+  | "INVALID"
+  | "NO_RESPONSE";
+
+export const QUALIFICATION_STATUSES: { value: QualificationStatus; label: string; tone: Tone }[] = [
+  { value: "UNQUALIFIED", label: "Unqualified", tone: "neutral" },
+  { value: "CALLING", label: "Calling", tone: "info" },
+  { value: "QUALIFIED", label: "Qualified", tone: "success" },
+  { value: "NOT_INTERESTED", label: "Not interested", tone: "warning" },
+  { value: "INVALID", label: "Invalid", tone: "danger" },
+  { value: "NO_RESPONSE", label: "No response", tone: "warning" },
+];
+
+/** Statuses a qualified lead moves through in the main pipeline. */
+export const MAIN_STATUSES: LeadStatus[] = [
+  "QUALIFIED",
+  "FOLLOW_UP",
+  "PROPOSAL_SENT",
+  "NEGOTIATION",
   "WON",
   "LOST",
 ];

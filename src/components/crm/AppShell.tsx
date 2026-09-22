@@ -23,6 +23,7 @@ import {
   LogOut,
   Menu,
   Headphones,
+  Inbox,
 } from "lucide-react";
 import { useIsAdmin } from "@/lib/crm/roles";
 import { cn } from "@/lib/utils";
@@ -37,16 +38,17 @@ type NavItem = { to: string; label: string; icon: typeof Users };
 
 export const ADMIN_NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/leads", label: "Leads", icon: Users },
+  { to: "/incoming", label: "Incoming Leads", icon: Inbox },
+  { to: "/leads", label: "Main Leads", icon: Users },
   { to: "/pipeline", label: "Pipeline", icon: KanbanSquare },
   { to: "/follow-ups", label: "Follow-ups", icon: CalendarClock },
-  { to: "/import", label: "Import Leads", icon: Upload },
-  { to: "/callers", label: "Callers", icon: Headphones },
   { to: "/customers", label: "Customers", icon: UserCheck },
+  { to: "/import", label: "Import Leads", icon: Upload },
+  { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/callers", label: "Callers", icon: Headphones },
   { to: "/activities", label: "Activities", icon: History },
   { to: "/sources", label: "Lead Sources", icon: Radio },
   { to: "/categories", label: "Categories", icon: Tags },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/tasks", label: "Tasks", icon: ListTodo },
   { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/payments", label: "Payments", icon: Wallet },
@@ -56,7 +58,8 @@ export const ADMIN_NAV: NavItem[] = [
 
 export const CALLER_NAV: NavItem[] = [
   { to: "/dashboard", label: "My Day", icon: LayoutDashboard },
-  { to: "/leads", label: "My Leads", icon: Users },
+  { to: "/incoming", label: "Incoming Leads", icon: Inbox },
+  { to: "/leads", label: "Main Leads", icon: Users },
   { to: "/follow-ups", label: "Follow-ups", icon: CalendarClock },
   { to: "/activities", label: "My Activity", icon: History },
 ];

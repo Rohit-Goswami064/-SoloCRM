@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_field_defs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          key: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key?: string
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -301,6 +328,8 @@ export type Database = {
       }
       imports: {
         Row: {
+          assigned_to: string | null
+          category_id: string | null
           created_at: string
           failed_rows: number
           file_name: string
@@ -314,6 +343,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assigned_to?: string | null
+          category_id?: string | null
           created_at?: string
           failed_rows?: number
           file_name: string
@@ -327,6 +358,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assigned_to?: string | null
+          category_id?: string | null
           created_at?: string
           failed_rows?: number
           file_name?: string
@@ -340,6 +373,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "imports_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "lead_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "imports_source_id_fkey"
             columns: ["source_id"]
@@ -485,12 +525,17 @@ export type Database = {
           converted_customer_id: string | null
           country: string | null
           created_at: string
+          custom_fields: Json
           deal_value: number
+          disposition_reason: string | null
           email: string | null
           estimated_budget: number | null
           expected_close_date: string | null
+          expected_timeline: string | null
           first_contact_at: string | null
           id: string
+          import_id: string | null
+          import_row_number: number | null
           is_demo: boolean
           last_contact_at: string | null
           lost_reason: string | null
@@ -500,8 +545,14 @@ export type Database = {
           phone: string | null
           phone_normalized: string | null
           proposal_status: string | null
+          qualification_date: string | null
+          qualification_notes: string | null
+          qualification_status: Database["public"]["Enums"]["qualification_status"]
+          qualified_by: string | null
+          requirement: string | null
           service_interested: string | null
           source_id: string | null
+          stage: Database["public"]["Enums"]["lead_stage"]
           state: string | null
           status: Database["public"]["Enums"]["lead_status"]
           temperature: Database["public"]["Enums"]["lead_temp"]
@@ -521,12 +572,17 @@ export type Database = {
           converted_customer_id?: string | null
           country?: string | null
           created_at?: string
+          custom_fields?: Json
           deal_value?: number
+          disposition_reason?: string | null
           email?: string | null
           estimated_budget?: number | null
           expected_close_date?: string | null
+          expected_timeline?: string | null
           first_contact_at?: string | null
           id?: string
+          import_id?: string | null
+          import_row_number?: number | null
           is_demo?: boolean
           last_contact_at?: string | null
           lost_reason?: string | null
@@ -536,8 +592,14 @@ export type Database = {
           phone?: string | null
           phone_normalized?: string | null
           proposal_status?: string | null
+          qualification_date?: string | null
+          qualification_notes?: string | null
+          qualification_status?: Database["public"]["Enums"]["qualification_status"]
+          qualified_by?: string | null
+          requirement?: string | null
           service_interested?: string | null
           source_id?: string | null
+          stage?: Database["public"]["Enums"]["lead_stage"]
           state?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           temperature?: Database["public"]["Enums"]["lead_temp"]
@@ -557,12 +619,17 @@ export type Database = {
           converted_customer_id?: string | null
           country?: string | null
           created_at?: string
+          custom_fields?: Json
           deal_value?: number
+          disposition_reason?: string | null
           email?: string | null
           estimated_budget?: number | null
           expected_close_date?: string | null
+          expected_timeline?: string | null
           first_contact_at?: string | null
           id?: string
+          import_id?: string | null
+          import_row_number?: number | null
           is_demo?: boolean
           last_contact_at?: string | null
           lost_reason?: string | null
@@ -572,8 +639,14 @@ export type Database = {
           phone?: string | null
           phone_normalized?: string | null
           proposal_status?: string | null
+          qualification_date?: string | null
+          qualification_notes?: string | null
+          qualification_status?: Database["public"]["Enums"]["qualification_status"]
+          qualified_by?: string | null
+          requirement?: string | null
           service_interested?: string | null
           source_id?: string | null
+          stage?: Database["public"]["Enums"]["lead_stage"]
           state?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           temperature?: Database["public"]["Enums"]["lead_temp"]
@@ -595,6 +668,13 @@ export type Database = {
             columns: ["converted_customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "imports"
             referencedColumns: ["id"]
           },
           {
@@ -1005,6 +1085,7 @@ export type Database = {
       app_role: "ADMIN" | "CALLER"
       followup_status: "PENDING" | "COMPLETED" | "SKIPPED" | "RESCHEDULED"
       followup_type: "CALL" | "WHATSAPP" | "EMAIL" | "MEETING" | "OTHER"
+      lead_stage: "INCOMING" | "MAIN" | "NOT_INTERESTED" | "INVALID"
       lead_status:
         | "NEW"
         | "CONTACTED"
@@ -1026,6 +1107,13 @@ export type Database = {
         | "COMPLETED"
         | "ON_HOLD"
         | "CANCELLED"
+      qualification_status:
+        | "UNQUALIFIED"
+        | "CALLING"
+        | "QUALIFIED"
+        | "NOT_INTERESTED"
+        | "INVALID"
+        | "NO_RESPONSE"
       task_priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
       task_status: "TODO" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
     }
@@ -1171,6 +1259,7 @@ export const Constants = {
       app_role: ["ADMIN", "CALLER"],
       followup_status: ["PENDING", "COMPLETED", "SKIPPED", "RESCHEDULED"],
       followup_type: ["CALL", "WHATSAPP", "EMAIL", "MEETING", "OTHER"],
+      lead_stage: ["INCOMING", "MAIN", "NOT_INTERESTED", "INVALID"],
       lead_status: [
         "NEW",
         "CONTACTED",
@@ -1193,6 +1282,14 @@ export const Constants = {
         "COMPLETED",
         "ON_HOLD",
         "CANCELLED",
+      ],
+      qualification_status: [
+        "UNQUALIFIED",
+        "CALLING",
+        "QUALIFIED",
+        "NOT_INTERESTED",
+        "INVALID",
+        "NO_RESPONSE",
       ],
       task_priority: ["LOW", "MEDIUM", "HIGH", "URGENT"],
       task_status: ["TODO", "IN_PROGRESS", "COMPLETED", "CANCELLED"],

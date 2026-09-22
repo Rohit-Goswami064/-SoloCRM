@@ -67,7 +67,7 @@ function useDashboard() {
 
       const [leads, customers, projects, payments, followUps, sources, categories] =
         await Promise.all([
-          db.from("leads").select("id,name,company,phone,whatsapp,status,temperature,deal_value,source_id,category_id,created_at,last_contact_at,assigned_to"),
+          db.from("leads").select("id,name,company,phone,whatsapp,status,temperature,deal_value,source_id,category_id,created_at,last_contact_at,assigned_to,stage,qualification_status"),
           db.from("customers").select("id"),
           db.from("projects").select("id,status,project_value"),
           db.from("payments").select("amount,status"),
@@ -131,6 +131,12 @@ function useDashboard() {
       return {
         kpis: {
           total: allLeads.length,
+          incoming: count((l) => l.stage === "INCOMING"),
+          mainLeads: count((l) => l.stage === "MAIN"),
+          notInterested: count((l) => l.stage === "NOT_INTERESTED"),
+          invalid: count((l) => l.stage === "INVALID"),
+          won: count((l) => l.status === "WON"),
+          lost: count((l) => l.status === "LOST"),
           newLeads: count((l) => l.status === "NEW"),
           contacted: count((l) => l.status === "CONTACTED"),
           hot: count((l) => l.temperature === "HOT"),
@@ -310,11 +316,14 @@ function AdminDashboard() {
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-6">
+        <KpiCard label="Incoming Leads" value={k.incoming} to="/incoming" tone="accent" />
+        <KpiCard label="Main Leads" value={k.mainLeads} to="/leads" />
+        <KpiCard label="Qualified" value={k.qualified} to="/leads" search={{ status: "QUALIFIED" }} />
+        <KpiCard label="Won" value={k.won} to="/leads" search={{ status: "WON" }} tone="success" />
+        <KpiCard label="Lost" value={k.lost} to="/leads" search={{ status: "LOST" }} tone="danger" />
         <KpiCard label="Total Leads" value={k.total} to="/leads" />
         <KpiCard label="New" value={k.newLeads} to="/leads" search={{ status: "NEW" }} tone="accent" />
-        <KpiCard label="Contacted" value={k.contacted} to="/leads" search={{ status: "CONTACTED" }} />
         <KpiCard label="Hot Leads" value={k.hot} to="/leads" search={{ temperature: "HOT" }} tone="danger" />
-        <KpiCard label="Qualified" value={k.qualified} to="/leads" search={{ status: "QUALIFIED" }} />
         <KpiCard label="Customers" value={k.converted} to="/customers" tone="success" />
         <KpiCard label="Follow-up Due" value={k.dueToday} to="/follow-ups" search={{ view: "today" }} tone="warning" />
         <KpiCard label="Overdue" value={k.overdue} to="/follow-ups" search={{ view: "overdue" }} tone="danger" />
