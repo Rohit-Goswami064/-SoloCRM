@@ -402,7 +402,7 @@ function IncomingPage() {
           open={!!noteFor}
           onOpenChange={(o) => !o && setNoteFor(null)}
           leadId={noteFor.id}
-          leadName={noteFor.name}
+          leadName={noteFor.name ?? noteFor.company ?? "Lead"}
           onSaved={refresh}
         />
       )}

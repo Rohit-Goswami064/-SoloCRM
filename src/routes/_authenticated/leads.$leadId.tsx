@@ -34,6 +34,7 @@ import {
   formatDate,
   formatDateTime,
   formatMoney,
+  formatMoneyOptional,
   labelOf,
   leadScore,
   toneOf,
@@ -47,6 +48,7 @@ import {
   logActivity,
   updateRow,
   useCategories,
+  useCustomFields,
   useInvalidate,
   useLead,
   useList,
@@ -109,6 +111,7 @@ function LeadDetail() {
   const { data: lead, isLoading, error } = useLead(leadId);
   const { data: sources = [] } = useSources();
   const { data: categories = [] } = useCategories();
+  const { data: customDefs = [] } = useCustomFields();
 
   const { data: activities = [] } = useList<Activity>("lead_activities", {
     key: ["lead", leadId],
@@ -168,7 +171,7 @@ function LeadDetail() {
       </Button>
 
       <PageHeader
-        title={lead.name}
+        title={lead.name ?? lead.company ?? "Unnamed lead"}
         description={[lead.company, lead.city].filter(Boolean).join(" · ") || "No company recorded"}
         actions={
           <>
@@ -194,7 +197,7 @@ function LeadDetail() {
             tone={toneOf(QUALIFICATION_STATUSES, (lead as any).qualification_status)}
           />
           <StatusPill label={labelOf(TEMPERATURES, lead.temperature)} tone={toneOf(TEMPERATURES, lead.temperature)} />
-          <span className="text-sm font-semibold tabular-nums">{formatMoney(lead.deal_value)}</span>
+          <span className="text-sm font-semibold tabular-nums">Deal value: {formatMoneyOptional(lead.deal_value)}</span>
           <Popover>
             <PopoverTrigger asChild>
               <Button size="sm" variant="ghost">
@@ -254,7 +257,8 @@ function LeadDetail() {
                     key={t.name}
                     className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
                     onClick={async () => {
-                      const msg = t.body.replaceAll("{name}", lead.name.split(" ")[0] ?? lead.name);
+                      const leadLabel = lead.name ?? lead.company ?? "there";
+                      const msg = t.body.replaceAll("{name}", leadLabel.split(" ")[0] ?? leadLabel);
                       window.open(waLink(lead.whatsapp || lead.phone, msg)!, "_blank", "noopener");
                       await logActivity({
                         type: "WHATSAPP",
@@ -356,7 +360,7 @@ function LeadDetail() {
             <Field label="Last contact" value={formatDateTime(lead.last_contact_at)} />
             <Field label="Next follow-up" value={formatDateTime(lead.next_follow_up)} />
             <Field label="Expected closing date" value={formatDate(lead.expected_close_date)} />
-            <Field label="Estimated budget" value={lead.estimated_budget ? formatMoney(lead.estimated_budget) : "-"} />
+            <Field label="Estimated budget" value={formatMoneyOptional(lead.estimated_budget, "Not set")} />
             <Field label="Proposal status" value={lead.proposal_status} />
             <Field label="Lost reason" value={lead.lost_reason} />
           </Surface>
@@ -382,7 +386,11 @@ function LeadDetail() {
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {Object.entries((lead as any).custom_fields as Record<string, any>).map(([k, v]) => (
-                  <Field key={k} label={k.replaceAll("_", " ")} value={String(v ?? "-")} />
+                  <Field
+                    key={k}
+                    label={customDefs.find((d) => d.key === k)?.label ?? k.replaceAll("_", " ")}
+                    value={v === null || v === undefined || v === "" ? null : String(v)}
+                  />
                 ))}
               </div>
             )}

@@ -3,15 +3,19 @@ import { FormDialog, type Field } from "./FormDialog";
 import {
   LEAD_STATUSES,
   TEMPERATURES,
+  customFieldInputType,
   isValidEmail,
   isValidPhone,
 } from "@/lib/crm/constants";
 import {
+  emptyToNull,
   insertRow,
   logActivity,
   logAudit,
+  numberOrNull,
   updateRow,
   useCategories,
+  useCustomFields,
   useSources,
   type Lead,
 } from "@/lib/crm/db";
@@ -36,9 +40,10 @@ export function LeadDialog({
   const { data: categories = [] } = useCategories();
   const { isAdmin } = useIsAdmin();
   const { data: callers = [] } = useCallers();
+  const { data: customDefs = [] } = useCustomFields();
 
   const fields: Field[] = [
-    { name: "name", label: "Lead name", required: true },
+    { name: "name", label: "Lead name", placeholder: "Optional" },
     { name: "company", label: "Company" },
     { name: "contact_person", label: "Contact person" },
     { name: "phone", label: "Phone", type: "tel" },
@@ -92,18 +97,44 @@ export function LeadDialog({
     { name: "expected_close_date", label: "Expected closing date", type: "date" },
     { name: "next_follow_up", label: "Next follow-up", type: "datetime-local" },
     { name: "notes", label: "Notes", type: "textarea" },
+    ...customDefs.map((d) => {
+      const type = customFieldInputType(d.field_type);
+      const field: Field = {
+        name: `cf_${d.key}`,
+        label: d.label,
+        placeholder: d.is_required ? "" : "Optional",
+      };
+      field.type = type as NonNullable<Field["type"]>;
+      if (d.is_required) field.required = true;
+      if (type === "select") {
+        field.options =
+          d.field_type === "BOOLEAN"
+            ? [
+                { value: "Yes", label: "Yes" },
+                { value: "No", label: "No" },
+              ]
+            : (d.options ?? []).map((o) => ({ value: o, label: o }));
+      }
+      return field;
+    }),
   ];
+
+  const existingCustom = ((lead?.custom_fields ?? {}) as Record<string, unknown>) || {};
+  const customInitial = Object.fromEntries(
+    customDefs.map((d) => [`cf_${d.key}`, existingCustom[d.key] ?? ""]),
+  );
 
   const initial = lead
     ? {
         ...lead,
+        ...customInitial,
         estimated_budget: lead.estimated_budget ?? "",
         deal_value: lead.deal_value ?? "",
         next_follow_up: lead.next_follow_up
           ? new Date(lead.next_follow_up).toISOString().slice(0, 16)
           : "",
       }
-    : { status: "NEW", temperature: "WARM", country: "India" };
+    : { status: "NEW", temperature: "WARM", country: "India", ...customInitial };
 
   return (
     <FormDialog
@@ -116,34 +147,45 @@ export function LeadDialog({
       validate={(v) => {
         if (v.phone && !isValidPhone(v.phone)) return "Phone number needs at least 10 digits.";
         if (v.email && !isValidEmail(v.email)) return "Email address looks invalid.";
-        if (v.deal_value && Number(v.deal_value) < 0) return "Deal value cannot be negative.";
+        if (v.deal_value !== "" && v.deal_value != null && Number(v.deal_value) < 0)
+          return "Deal value cannot be negative.";
+        if (!String(v.name ?? "").trim() && !String(v.company ?? "").trim())
+          return "Enter at least a lead name or a company name.";
         return null;
       }}
       onSubmit={async (v) => {
+        const custom: Record<string, unknown> = { ...existingCustom };
+        customDefs.forEach((d) => {
+          const raw = emptyToNull(v[`cf_${d.key}`]);
+          if (raw === null) delete custom[d.key];
+          else custom[d.key] = d.field_type === "NUMBER" ? numberOrNull(raw) : raw;
+        });
+
         const payload: any = {
-          name: String(v.name).trim(),
-          company: v.company || null,
-          contact_person: v.contact_person || null,
-          phone: v.phone || null,
-          whatsapp: v.whatsapp || null,
-          email: v.email || null,
-          website: v.website || null,
-          address: v.address || null,
-          city: v.city || null,
-          state: v.state || null,
-          country: v.country || null,
-          company_size: v.company_size || null,
-          service_interested: v.service_interested || null,
-          category_id: v.category_id || null,
-          ...(isAdmin ? { assigned_to: v.assigned_to || null } : {}),
-          source_id: v.source_id || null,
-          status: v.status,
-          temperature: v.temperature,
-          estimated_budget: v.estimated_budget === "" ? null : Number(v.estimated_budget),
-          deal_value: v.deal_value === "" ? 0 : Number(v.deal_value),
-          expected_close_date: v.expected_close_date || null,
+          name: emptyToNull(v.name) ?? emptyToNull(v.company),
+          company: emptyToNull(v.company),
+          contact_person: emptyToNull(v.contact_person),
+          phone: emptyToNull(v.phone),
+          whatsapp: emptyToNull(v.whatsapp),
+          email: emptyToNull(v.email),
+          website: emptyToNull(v.website),
+          address: emptyToNull(v.address),
+          city: emptyToNull(v.city),
+          state: emptyToNull(v.state),
+          country: emptyToNull(v.country),
+          company_size: emptyToNull(v.company_size),
+          service_interested: emptyToNull(v.service_interested),
+          category_id: emptyToNull(v.category_id),
+          ...(isAdmin ? { assigned_to: emptyToNull(v.assigned_to) } : {}),
+          source_id: emptyToNull(v.source_id),
+          status: v.status || "NEW",
+          temperature: emptyToNull(v.temperature),
+          estimated_budget: numberOrNull(v.estimated_budget),
+          deal_value: numberOrNull(v.deal_value),
+          expected_close_date: emptyToNull(v.expected_close_date),
           next_follow_up: v.next_follow_up ? new Date(v.next_follow_up).toISOString() : null,
-          notes: v.notes || null,
+          notes: emptyToNull(v.notes),
+          custom_fields: custom,
         };
         if (lead) {
           await updateRow("leads", lead.id, payload);

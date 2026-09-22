@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PageHeader, Surface } from "@/components/crm/Common";
 import { ConfirmDialog } from "@/components/crm/FormDialog";
 import { StatusPill } from "@/components/crm/StatusPill";
+import { CustomFieldsSettings } from "@/components/crm/CustomFieldsSettings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,6 +127,7 @@ function SettingsPage() {
           <TabsTrigger value="prefs">Preferences</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp templates</TabsTrigger>
           <TabsTrigger value="statuses">Statuses</TabsTrigger>
+          <TabsTrigger value="custom">Custom fields</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="data">Demo data</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
@@ -234,6 +236,10 @@ function SettingsPage() {
               <Button variant="outline" asChild><Link to="/categories">Edit categories</Link></Button>
             </div>
           </Surface>
+        </TabsContent>
+
+        <TabsContent value="custom" className="mt-4">
+          <CustomFieldsSettings />
         </TabsContent>
 
         <TabsContent value="integrations" className="mt-4">

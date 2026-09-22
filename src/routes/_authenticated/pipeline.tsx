@@ -9,6 +9,7 @@ import {
   PIPELINE_STATUSES,
   TEMPERATURES,
   formatMoney,
+  formatMoneyOptional,
   labelOf,
   toneOf,
 } from "@/lib/crm/constants";
@@ -108,7 +109,7 @@ function Pipeline() {
                           label={labelOf(TEMPERATURES, l.temperature)}
                           tone={toneOf(TEMPERATURES, l.temperature)}
                         />
-                        <span className="text-xs tabular-nums">{formatMoney(l.deal_value)}</span>
+                        <span className="text-xs tabular-nums">{formatMoneyOptional(l.deal_value, "—")}</span>
                       </div>
                     </div>
                   ))}

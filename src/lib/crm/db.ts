@@ -112,6 +112,53 @@ export function useSources() {
   });
 }
 
+export type CustomFieldDef = {
+  id: string;
+  key: string;
+  label: string;
+  field_type: string;
+  options: string[];
+  is_required: boolean;
+  is_active: boolean;
+  sort_order: number;
+};
+
+/** Admin-defined extra lead fields. Values live in leads.custom_fields (no schema change per field). */
+export function useCustomFields(activeOnly = true) {
+  return useQuery({
+    queryKey: ["custom_field_defs", activeOnly],
+    queryFn: async () => {
+      let q = client().from("custom_field_defs").select("*").order("sort_order").order("label");
+      if (activeOnly) q = q.eq("is_active", true);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as CustomFieldDef[];
+    },
+  });
+}
+
+export function slugifyFieldKey(label: string) {
+  return label
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+/** Empty strings become NULL so optional columns never break an insert. */
+export function emptyToNull(value: unknown) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  return value;
+}
+
+export function numberOrNull(value: unknown) {
+  const v = emptyToNull(value);
+  if (v === null) return null;
+  const n = Number(String(v).replace(/[^\d.-]/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
 export function useCategories() {
   return useQuery({
     queryKey: ["lead_categories"],

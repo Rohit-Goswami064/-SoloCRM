@@ -99,7 +99,7 @@ function TasksPage() {
       name: "lead_id",
       label: "Related lead",
       type: "select" as const,
-      options: leads.map((l) => ({ value: l.id, label: l.name })),
+      options: leads.map((l) => ({ value: l.id, label: l.name ?? l.company ?? "Lead" })),
     },
     {
       name: "customer_id",

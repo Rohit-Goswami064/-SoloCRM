@@ -22,6 +22,7 @@ import {
   currentUserId,
   insertRow,
   insertRows,
+  numberOrNull,
   logAudit,
   updateRow,
   useInvalidate,
@@ -359,7 +360,7 @@ function ImportPage() {
           company_size: row.data['company_size'] ?? null,
           service_interested: row.data['service_interested'] ?? null,
           notes: row.data['notes'] ?? null,
-          deal_value: row.data['deal_value'] ? Number(String(row.data['deal_value']).replace(/[^\d.]/g, "")) || 0 : 0,
+          deal_value: numberOrNull(row.data['deal_value']),
           category_id: categoryId(row.data['lead_category']) ?? defaultCategoryId ?? null,
           source_id: sourceIdByName(row.data['lead_source']) ?? sourceId ?? null,
           assigned_to: assignTo || null,
@@ -481,11 +482,11 @@ function ImportPage() {
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__ignore">— Ignore this column —</SelectItem>
+                      <SelectItem value={customValue}>Create custom field "{h}"</SelectItem>
+                      <SelectItem value="__ignore">— Ignore this column (data not saved) —</SelectItem>
                       {TARGETS.map((t) => (
                         <SelectItem key={t.key} value={t.key}>{t.label}</SelectItem>
                       ))}
-                      <SelectItem value={customValue}>Keep as custom field "{h}"</SelectItem>
                       {customDefs
                         .filter((d: any) => d.key !== slug(h))
                         .map((d: any) => (
@@ -500,7 +501,7 @@ function ImportPage() {
                   </p>
                   {!value && (
                     <p className="text-xs text-warning">
-                      Not matched — ignore it, or keep it as a custom field so the data is not lost.
+                      Unknown field — create a custom field so the data is not lost, or choose Ignore.
                     </p>
                   )}
                 </div>

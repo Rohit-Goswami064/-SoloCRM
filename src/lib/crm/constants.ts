@@ -188,6 +188,45 @@ export function formatMoney(value?: number | null) {
   }).format(Number(value ?? 0));
 }
 
+/** Money that may genuinely be unknown — ₹0 and "not known yet" are different things. */
+export function formatMoneyOptional(value?: number | string | null, empty = "Not set") {
+  if (value === null || value === undefined || value === "") return empty;
+  return formatMoney(Number(value));
+}
+
+/** Field types an admin can choose when creating a custom lead field. */
+export const CUSTOM_FIELD_TYPES = [
+  { value: "TEXT", label: "Text" },
+  { value: "NUMBER", label: "Number" },
+  { value: "URL", label: "Link (URL)" },
+  { value: "EMAIL", label: "Email" },
+  { value: "PHONE", label: "Phone" },
+  { value: "DATE", label: "Date" },
+  { value: "BOOLEAN", label: "Yes / No" },
+  { value: "SELECT", label: "Choice list" },
+] as const;
+
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number]["value"];
+
+/** Maps a custom field type to the form input type used by FormDialog. */
+export function customFieldInputType(type: string) {
+  switch (type) {
+    case "NUMBER":
+      return "number";
+    case "EMAIL":
+      return "email";
+    case "PHONE":
+      return "tel";
+    case "DATE":
+      return "date";
+    case "BOOLEAN":
+    case "SELECT":
+      return "select";
+    default:
+      return "text";
+  }
+}
+
 export function formatDate(value?: string | null) {
   if (!value) return "-";
   return new Date(value).toLocaleDateString("en-IN", {

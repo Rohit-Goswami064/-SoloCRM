@@ -29,6 +29,7 @@ import {
   formatDate,
   formatDateTime,
   formatMoney,
+  formatMoneyOptional,
   labelOf,
   toneOf,
   waLink,
@@ -514,7 +515,7 @@ function LeadsPage() {
                     {isAdmin && (
                       <td className="px-3 py-2 text-muted-foreground">{callerName(l.assigned_to)}</td>
                     )}
-                    <td className="px-3 py-2 text-right tabular-nums">{formatMoney(l.deal_value)}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{formatMoneyOptional(l.deal_value, "—")}</td>
                     <td className="px-3 py-2 text-muted-foreground">{formatDateTime(l.next_follow_up)}</td>
                     <td className="px-3 py-2 text-muted-foreground">{formatDate(l.created_at)}</td>
                     <td className="px-3 py-2">
@@ -572,7 +573,7 @@ function LeadsPage() {
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <StatusPill label={labelOf(LEAD_STATUSES, l.status)} tone={toneOf(LEAD_STATUSES, l.status)} />
                   <StatusPill label={labelOf(TEMPERATURES, l.temperature)} tone={toneOf(TEMPERATURES, l.temperature)} />
-                  <span className="text-xs tabular-nums text-muted-foreground">{formatMoney(l.deal_value)}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground">{formatMoneyOptional(l.deal_value, "—")}</span>
                 </div>
                 <div className="mt-3 flex gap-2">
                   {l.phone && (

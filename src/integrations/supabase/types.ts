@@ -48,25 +48,40 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          field_type: string
           id: string
+          is_active: boolean
+          is_required: boolean
           key: string
           label: string
+          options: string[]
+          sort_order: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          field_type?: string
           id?: string
+          is_active?: boolean
+          is_required?: boolean
           key: string
           label: string
+          options?: string[]
+          sort_order?: number
           updated_at?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          field_type?: string
           id?: string
+          is_active?: boolean
+          is_required?: boolean
           key?: string
           label?: string
+          options?: string[]
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
@@ -526,7 +541,7 @@ export type Database = {
           country: string | null
           created_at: string
           custom_fields: Json
-          deal_value: number
+          deal_value: number | null
           disposition_reason: string | null
           email: string | null
           estimated_budget: number | null
@@ -539,7 +554,7 @@ export type Database = {
           is_demo: boolean
           last_contact_at: string | null
           lost_reason: string | null
-          name: string
+          name: string | null
           next_follow_up: string | null
           notes: string | null
           phone: string | null
@@ -555,7 +570,7 @@ export type Database = {
           stage: Database["public"]["Enums"]["lead_stage"]
           state: string | null
           status: Database["public"]["Enums"]["lead_status"]
-          temperature: Database["public"]["Enums"]["lead_temp"]
+          temperature: Database["public"]["Enums"]["lead_temp"] | null
           updated_at: string
           user_id: string
           website: string | null
@@ -573,7 +588,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           custom_fields?: Json
-          deal_value?: number
+          deal_value?: number | null
           disposition_reason?: string | null
           email?: string | null
           estimated_budget?: number | null
@@ -586,7 +601,7 @@ export type Database = {
           is_demo?: boolean
           last_contact_at?: string | null
           lost_reason?: string | null
-          name: string
+          name?: string | null
           next_follow_up?: string | null
           notes?: string | null
           phone?: string | null
@@ -602,7 +617,7 @@ export type Database = {
           stage?: Database["public"]["Enums"]["lead_stage"]
           state?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
-          temperature?: Database["public"]["Enums"]["lead_temp"]
+          temperature?: Database["public"]["Enums"]["lead_temp"] | null
           updated_at?: string
           user_id: string
           website?: string | null
@@ -620,7 +635,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           custom_fields?: Json
-          deal_value?: number
+          deal_value?: number | null
           disposition_reason?: string | null
           email?: string | null
           estimated_budget?: number | null
@@ -633,7 +648,7 @@ export type Database = {
           is_demo?: boolean
           last_contact_at?: string | null
           lost_reason?: string | null
-          name?: string
+          name?: string | null
           next_follow_up?: string | null
           notes?: string | null
           phone?: string | null
@@ -649,7 +664,7 @@ export type Database = {
           stage?: Database["public"]["Enums"]["lead_stage"]
           state?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
-          temperature?: Database["public"]["Enums"]["lead_temp"]
+          temperature?: Database["public"]["Enums"]["lead_temp"] | null
           updated_at?: string
           user_id?: string
           website?: string | null
