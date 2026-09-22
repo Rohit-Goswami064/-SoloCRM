@@ -1,0 +1,14 @@
+revoke all on function public.normalize_phone(text) from public, anon;
+grant execute on function public.normalize_phone(text) to authenticated, service_role;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.set_updated_at() from public, anon, authenticated;
+revoke all on function public.leads_normalize() from public, anon, authenticated;
+revoke all on function public.customers_normalize() from public, anon, authenticated;
+revoke all on function public.seed_demo_data() from public, anon;
+revoke all on function public.delete_demo_data() from public, anon;
+grant execute on function public.seed_demo_data() to authenticated;
+grant execute on function public.delete_demo_data() to authenticated;
+revoke all on function public.has_role(uuid, public.app_role) from public;
+revoke all on function public.is_admin() from public;
+grant execute on function public.has_role(uuid, public.app_role) to authenticated;
+grant execute on function public.is_admin() to authenticated;
